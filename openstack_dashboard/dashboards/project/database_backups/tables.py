@@ -1,6 +1,7 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright 2013 Rackspace Hosting
+# Copyright 2013 Mirantis Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -21,7 +22,7 @@ from django.template.defaultfilters import title
 from django.utils.translation import ugettext_lazy as _
 
 from horizon import tables
-from horizon.utils.filters import replace_underscores
+from horizon.utils import filters
 
 from openstack_dashboard import api
 
@@ -120,7 +121,7 @@ class BackupsTable(tables.DataTable):
     instance = tables.Column(db_name, link=db_link,
                              verbose_name=_("Database"))
     status = tables.Column("status",
-                           filters=(title, replace_underscores),
+                           filters=(title, filters.replace_underscores),
                            verbose_name=_("Status"),
                            status=True,
                            status_choices=STATUS_CHOICES)
