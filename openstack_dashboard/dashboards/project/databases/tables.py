@@ -22,7 +22,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from horizon import tables
 from horizon.templatetags import sizeformat
-from horizon.utils.filters import replace_underscores
+from horizon.utils import filters
 
 from openstack_dashboard import api
 from openstack_dashboard.dashboards.project.database_backups.tables import \
@@ -192,7 +192,7 @@ class InstancesTable(tables.DataTable):
                          verbose_name=_("Size"),
                          attrs={'data-type': 'size'})
     status = tables.Column("status",
-                           filters=(title, replace_underscores),
+                           filters=(title, filters.replace_underscores),
                            verbose_name=_("Status"),
                            status=True,
                            status_choices=STATUS_CHOICES,
@@ -256,7 +256,7 @@ class InstanceBackupsTable(tables.DataTable):
                              link=lambda obj: obj.locationRef,
                              verbose_name=_("Backup File"))
     status = tables.Column("status",
-                           filters=(title, replace_underscores),
+                           filters=(title, filters.replace_underscores),
                            verbose_name=_("Status"),
                            status=True,
                            status_choices=STATUS_CHOICES,
