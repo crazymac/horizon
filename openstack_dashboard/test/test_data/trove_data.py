@@ -17,7 +17,7 @@
 from troveclient import instances
 from troveclient import backups
 
-from openstack_dashboard.test.test_data.utils import TestDataContainer
+from openstack_dashboard.test.test_data import utils
 
 
 DATABASE_DATA = {
@@ -72,8 +72,8 @@ def data(TEST):
     bkup1 = backups.Backup(backups.Backups(None), BACKUP_ONE)
     bkup2 = backups.Backup(backups.Backups(None), BACKUP_TWO)
 
-    TEST.databases = TestDataContainer()
-    TEST.database_backups = TestDataContainer()
+    TEST.databases = utils.TestDataContainer()
+    TEST.database_backups = utils.TestDataContainer()
     TEST.databases.add(database)
     TEST.database_backups.add(bkup1)
     TEST.database_backups.add(bkup2)
