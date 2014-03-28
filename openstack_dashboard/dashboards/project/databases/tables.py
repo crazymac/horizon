@@ -1,7 +1,5 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
-# Copyright 2012 Nebula, Inc.
-#
+#    Copyright 2012 Nebula, Inc.
+#    Copyright 2014 Mirantis, Inc.
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -135,6 +133,16 @@ def get_size(instance):
     return _("Not available")
 
 
+def get_datastore(instance):
+    if hasattr(instance, 'datastore'):
+        return instance.datastore.get("type", "-")
+
+
+def get_version(instance):
+    if hasattr(instance, 'datastore'):
+        return instance.datastore.get("version", "-")
+
+
 def get_databases(user):
     if hasattr(user, "access"):
         databases = [db.name for db in user.access]
@@ -154,6 +162,10 @@ class InstancesTable(tables.DataTable):
     name = tables.Column("name",
                          link=("horizon:project:databases:detail"),
                          verbose_name=_("Database Name"))
+    datastore = tables.Column(
+        get_datastore, verbose_name=_("Datastore Type"))
+    datastore_version = tables.Column(
+        get_version, verbose_name=_("Datastore Version"))
     host = tables.Column("host", verbose_name=_("Host"))
     size = tables.Column(get_size,
                          verbose_name=_("Size"),

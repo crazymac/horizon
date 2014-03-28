@@ -18,6 +18,8 @@ import logging
 
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
+from django.views.decorators.debug import sensitive_variables  # noqa
+
 from horizon import exceptions
 from horizon import forms
 from horizon.utils import memoized
@@ -29,7 +31,11 @@ LOG = logging.getLogger(__name__)
 
 
 class SetInstanceDetailsAction(workflows.Action):
+
     name = forms.CharField(max_length=80, label=_("Database Name"))
+    datastore_version = forms.ChoiceField(label=_("Datastore Version"),
+                                          help_text=_("Registered "
+                                                      "Datastore Version."))
     flavor = forms.ChoiceField(label=_("Flavor"),
                                help_text=_("Size of image to launch."))
     volume = forms.IntegerField(label=_("Volume Size"),
@@ -42,6 +48,21 @@ class SetInstanceDetailsAction(workflows.Action):
         help_text_template = ("project/databases/_launch_details_help.html")
 
     @memoized.memoized_method
+    def datastore_versions(self, request):
+        vs = []
+        try:
+            datastores = api.trove.datastore_list(request)
+            for datastore in datastores:
+                versions = api.trove.datastore_versions_list(
+                    request, datastore.name)
+                for version in versions:
+                    vs.append(version.name)
+            return vs
+        except Exception:
+            LOG.exception("Exception while obtaining datastore version list")
+            self._datastore_versions = []
+
+    @memoized.memoized_method
     def flavors(self, request):
         try:
             return api.trove.flavor_list(request)
@@ -52,6 +73,9 @@ class SetInstanceDetailsAction(workflows.Action):
     def populate_flavor_choices(self, request, context):
         flavor_list = [(f.id, "%s" % f.name) for f in self.flavors(request)]
         return sorted(flavor_list)
+
+    def populate_datastore_version_choices(self, request, context):
+        return sorted(self.datastore_versions(request))
 
 
 TROVE_ADD_USER_PERMS = getattr(settings, 'TROVE_ADD_USER_PERMS', [])
@@ -188,6 +212,14 @@ class LaunchInstance(workflows.Workflow):
             backup = {'backupRef': context['backup']}
         return backup
 
+    def _get_datastore_version(self, context):
+        return context.get('datastore_version')
+
+    def _get_datastore(self, request, version):
+        return (api.trove.datastore_version_show(request, version).id
+                if version else None)
+
+    @sensitive_variables('context')
     def handle(self, request, context):
         try:
             LOG.info("Launching instance with parameters "
@@ -196,13 +228,17 @@ class LaunchInstance(workflows.Workflow):
                      context['name'], context['volume'], context['flavor'],
                      self._get_databases(context), self._get_users(context),
                      self._get_backup(context))
+            datastore_version = self._get_datastore_version(context)
+            datastore = self._get_datastore(context, datastore_version)
             api.trove.instance_create(request,
                                       context['name'],
                                       context['volume'],
                                       context['flavor'],
                                       databases=self._get_databases(context),
                                       users=self._get_users(context),
-                                      restore_point=self._get_backup(context))
+                                      restore_point=self._get_backup(context),
+                                      datastore=datastore,
+                                      datastore_version=datastore_version)
             return True
         except Exception:
             exceptions.handle(request)

@@ -144,7 +144,9 @@ class DatabaseTests(test.TestCase):
             IsA(unicode),
             databases=None,
             restore_point=None,
-            users=None).AndReturn(self.databases.first())
+            users=None,
+            datastore_version=None,
+            datastore=None).AndReturn(self.databases.first())
 
         self.mox.ReplayAll()
         post = {
@@ -173,7 +175,9 @@ class DatabaseTests(test.TestCase):
             IsA(unicode),
             databases=None,
             restore_point=None,
-            users=None).AndRaise(trove_exception)
+            users=None,
+            datastore_version=None,
+            datastore=None).AndRaise(trove_exception)
 
         self.mox.ReplayAll()
         post = {
